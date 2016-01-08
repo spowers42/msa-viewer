@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+<link type="text/css" rel="stylesheet" href="https://s3-eu-west-1.amazonaws.com/biojs/msa/latest/msa.css">
+<script src="https://wzrd.in/bundle/msa@0.4.8"></script>
+<script src="http://wzrd.in/bundle/biojs-io-fasta@latest" ></script>
+
+<style>
+  #drop_zone {
+    border-style: solid;
+    border-width: 1px;
+    border-radius: 1em;
+    padding: 3em;
+    margin: 1em;
+    background-color: lightgray;
+    text-align: -webkit-center;
+  }
+</style>
+</head>
+
+<body>
+  <div id="msa_menubar"></div>
+<div id="msa_menu"></div>
+
+<div id="msa_menu_console"></div>
+
+<div id="drop_zone">Drop files here</div>
+
+<script >
+var msa = require("msa");
+var Fasta = require("biojs-io-fasta");
+var opts = {};
+
+opts.el = document.getElementById('msa_menu');
+opts.el.textContent = "Ready";
+
+opts.zoomer = { textVisible: true};
+opts.vis = {metacell: false, overviewbox: false, labelId: false};
+opts.columns = {hidden: [1,2,3]};
+var m = new msa.msa(opts);
+
+function renderMSA(seqs){
+  // hide some UI elements for large alignments
+  if(seqs.length > 1000){
+    m.g.vis.set("conserv", false);
+    m.g.vis.set("metacell", false);
+    m.g.vis.set("overviewbox", false);
+  }
+  m.seqs.reset(seqs);
+  m.g.zoomer.set("alignmentWidth", "auto");
+  m.g.zoomer.set("labelWidth", 200);
+  m.render();
+}
+
+</script>
+
+<script defer>
+  function handleFileSelect(evt) {
+    evt.stopPropagation();
+    evt.preventDefault();
+    var file = evt.dataTransfer.files[0];
+    if (file){
+      var reader = new FileReader();
+      reader.onload = function(e){
+        var fastaString = e.target.result
+        var seqs = Fasta.parse(fastaString);
+        renderMSA(seqs);
+      }
+      reader.readAsText(file);
+    }
+  }
+
+  function handleDragOver(evt) {
+    evt.stopPropagation();
+    evt.preventDefault();
+    evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
+  }
+
+  // Setup the dnd listeners.
+  var dropZone = document.getElementById('drop_zone');
+  dropZone.addEventListener('dragover', handleDragOver, false);
+  dropZone.addEventListener('drop', handleFileSelect, false);
+</script>
+</body>
