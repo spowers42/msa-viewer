@@ -28,8 +28,10 @@
 <div id="drop_zone">Drop files here</div>
 
 <script >
-var msa = require("msa");
-var Fasta = require("biojs-io-fasta");
+const electron = require('electron');
+const fs = require('fs')
+const msa = require("msa");
+const Fasta = require("biojs-io-fasta");
 var opts = {};
 
 opts.el = document.getElementById('msa_menu');
@@ -42,6 +44,7 @@ var m = new msa.msa(opts);
 
 function renderMSA(seqs){
   // hide some UI elements for large alignments
+  console.log('render')
   if(seqs.length > 1000){
     m.g.vis.set("conserv", false);
     m.g.vis.set("metacell", false);
@@ -55,24 +58,35 @@ function renderMSA(seqs){
 
 </script>
 
-<script defer>
+<script>
   function handleFileSelect(evt) {
-    evt.stopPropagation();
+    console.log("file select")
+    //evt.stopPropagation();
     evt.preventDefault();
     var file = evt.dataTransfer.files[0];
+    console.log(file.path)
     if (file){
       var reader = new FileReader();
+      console.log(reader)
       reader.onload = function(e){
+        console.log('onload')
         var fastaString = e.target.result
         var seqs = Fasta.parse(fastaString);
         renderMSA(seqs);
       }
-      reader.readAsText(file);
+      try{
+        reader.readAsText(file);
+      }catch(exception){
+        console.log(exception)
+      }
+
+      console.log(fs.readFileSync(file.path))
     }
   }
 
   function handleDragOver(evt) {
-    evt.stopPropagation();
+    console.log("dragover")
+    //evt.stopPropagation();
     evt.preventDefault();
     evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
   }
